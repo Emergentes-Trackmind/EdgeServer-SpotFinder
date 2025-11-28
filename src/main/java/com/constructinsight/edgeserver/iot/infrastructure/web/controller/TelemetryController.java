@@ -32,7 +32,7 @@ public class TelemetryController {
 
     /**
      * POST /api/iot/telemetry - Recibir telemetría de dispositivos
-     *
+
      * Actualiza el estado de un dispositivo existente o lo crea si no existe.
      * Usado por los scripts de simulación para enviar datos periódicos.
      */
@@ -48,7 +48,7 @@ public class TelemetryController {
     })
     @PostMapping("/telemetry")
     public ResponseEntity<Void> ingest(@RequestBody DeviceTelemetryReport telemetry) {
-        log.debug("📊 [Telemetry] Recibiendo telemetría de: {} (battery: {}%, status: {}, occupied: {})",
+        log.info("📊 [Telemetry] Recibiendo telemetría de: {} (battery: {}%, status: {}, occupied: {})",
                 telemetry.serialNumber(),
                 telemetry.battery(),
                 telemetry.status(),
@@ -67,25 +67,33 @@ public class TelemetryController {
             d.setType(DeviceType.SENSOR);
             d.setOwnerId(null);  // 🔑 Sin propietario, libre para ser reclamado
             d.setStatus(DeviceStatus.ONLINE);
-            d.setBattery(100);
+            d.setBattery(telemetry.battery() != null ? telemetry.battery() : 100);
             d.setLastCheckIn(Instant.now());
 
             return repo.save(d);
         });
 
-        // Actualizar campos con datos de telemetría
-        boolean updated = false;
+        // Log del estado actual antes de actualizar
+        log.info("🔋 [Telemetry] Estado ANTES - Device: {} | Battery actual: {}% | Nueva battery: {}%",
+                dev.getSerialNumber(), dev.getBattery(), telemetry.battery());
 
-        if (telemetry.battery() != null && !telemetry.battery().equals(dev.getBattery())) {
+        // Actualizar campos con datos de telemetría
+
+        // SIEMPRE actualizar batería si viene en la telemetría
+        if (telemetry.battery() != null) {
+            Integer oldBattery = dev.getBattery();
             dev.setBattery(telemetry.battery());
-            updated = true;
+            log.info("🔋 [Telemetry] Battery actualizada: {} | {}% → {}%",
+                    dev.getSerialNumber(), oldBattery, telemetry.battery());
         }
 
         if (telemetry.status() != null) {
             DeviceStatus newStatus = mapStatus(telemetry.status());
             if (!newStatus.equals(dev.getStatus())) {
+                DeviceStatus oldStatus = dev.getStatus();
                 dev.setStatus(newStatus);
-                updated = true;
+                log.info("📱 [Telemetry] Status actualizado: {} | {} → {}",
+                        dev.getSerialNumber(), oldStatus, newStatus);
             }
         }
 
@@ -97,16 +105,16 @@ public class TelemetryController {
         // TODO: Si agregas campo 'occupied' en IotDevice, descomenta esto:
         // if (telemetry.occupied() != null) {
         //     dev.setOccupied(telemetry.occupied());
-        //     updated = true;
         // }
 
-        // Persistir cambios
-        repo.save(dev);
+        // Persistir cambios SIEMPRE (para actualizar lastCheckIn)
+        IotDevice savedDevice = repo.save(dev);
 
-        if (updated) {
-            log.debug("✅ [Telemetry] Dispositivo actualizado: {} (battery: {}%, status: {})",
-                    dev.getSerialNumber(), dev.getBattery(), dev.getStatus());
-        }
+        log.info("✅ [Telemetry] Dispositivo guardado: {} | Battery final: {}% | Status: {} | LastCheckIn: {}",
+                savedDevice.getSerialNumber(),
+                savedDevice.getBattery(),
+                savedDevice.getStatus(),
+                savedDevice.getLastCheckIn());
 
         return ResponseEntity.accepted().build();
     }
@@ -148,4 +156,3 @@ public class TelemetryController {
             Double failingRate
     ) {}
 }
-
