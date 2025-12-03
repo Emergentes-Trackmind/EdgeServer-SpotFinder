@@ -4,6 +4,7 @@ import com.constructinsight.edgeserver.iot.domain.model.DeviceStatus;
 import com.constructinsight.edgeserver.iot.domain.model.DeviceType;
 import com.constructinsight.edgeserver.iot.domain.model.IotDevice;
 import com.constructinsight.edgeserver.iot.domain.port.IotDeviceRepository;
+import com.constructinsight.edgeserver.iot.integration.service.BackendIntegrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,6 +30,7 @@ import java.util.Optional;
 public class TelemetryController {
 
     private final IotDeviceRepository repo;
+    private final BackendIntegrationService backendIntegrationService;
 
     /**
      * POST /api/iot/telemetry - Recibir telemetría de dispositivos
@@ -102,10 +104,12 @@ public class TelemetryController {
                 telemetry.checkedAt() != null ? telemetry.checkedAt() : Instant.now()
         );
 
-        // TODO: Si agregas campo 'occupied' en IotDevice, descomenta esto:
-        // if (telemetry.occupied() != null) {
-        //     dev.setOccupied(telemetry.occupied());
-        // }
+        // Sincronizar estado de ocupación con el Backend Principal
+        if (telemetry.occupied() != null) {
+            log.info("🅿️ [Telemetry] Sincronizando ocupación con Backend Principal: {} - Occuped: {}",
+                    telemetry.serialNumber(), telemetry.occupied());
+            backendIntegrationService.notifyBackendOfTelemetry(telemetry.serialNumber(), telemetry.occupied());
+        }
 
         // Persistir cambios SIEMPRE (para actualizar lastCheckIn)
         IotDevice savedDevice = repo.save(dev);
