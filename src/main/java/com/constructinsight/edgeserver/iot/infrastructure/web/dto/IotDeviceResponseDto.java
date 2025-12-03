@@ -1,6 +1,7 @@
 package com.constructinsight.edgeserver.iot.infrastructure.web.dto;
 
 import com.constructinsight.edgeserver.iot.domain.model.DeviceStatus;
+import com.constructinsight.edgeserver.iot.domain.model.DeviceSyncStatus;
 import com.constructinsight.edgeserver.iot.domain.model.DeviceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,10 +26,10 @@ public class IotDeviceResponseDto {
     private DeviceStatus status;
     private Integer battery;
     private Instant lastCheckIn;
+    private DeviceSyncStatus syncStatus;
     private String ownerId;
     private String parkingId;
     private String parkingSpotId;
     private Instant createdAt;
     private Instant updatedAt;
 }
-

@@ -1,6 +1,7 @@
 package com.constructinsight.edgeserver.iot.infrastructure.web.controller;
 
 import com.constructinsight.edgeserver.iot.domain.model.DeviceStatus;
+import com.constructinsight.edgeserver.iot.domain.model.DeviceSyncStatus;
 import com.constructinsight.edgeserver.iot.domain.model.DeviceType;
 import com.constructinsight.edgeserver.iot.domain.model.IotDevice;
 import com.constructinsight.edgeserver.iot.domain.port.IotDeviceRepository;
@@ -71,6 +72,7 @@ public class TelemetryController {
             d.setStatus(DeviceStatus.ONLINE);
             d.setBattery(telemetry.battery() != null ? telemetry.battery() : 100);
             d.setLastCheckIn(Instant.now());
+            d.setSyncStatus(DeviceSyncStatus.DISCONNECTED);  // Inicialmente desconectado del backend
 
             return repo.save(d);
         });

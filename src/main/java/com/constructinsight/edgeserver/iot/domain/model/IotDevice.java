@@ -53,6 +53,11 @@ public class IotDevice {
     @Column(nullable = false)
     private Instant lastCheckIn;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    @Builder.Default
+    private DeviceSyncStatus syncStatus = DeviceSyncStatus.DISCONNECTED;
+
     // Privacy Fields - Nullable for unbound devices
     @Column(length = 100)
     private String ownerId;
@@ -117,4 +122,3 @@ public class IotDevice {
         return this.ownerId != null;
     }
 }
-

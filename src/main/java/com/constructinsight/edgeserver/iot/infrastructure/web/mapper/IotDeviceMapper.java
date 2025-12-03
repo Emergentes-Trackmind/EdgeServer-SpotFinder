@@ -26,6 +26,7 @@ public interface IotDeviceMapper {
     @Mapping(target = "parkingSpotId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "syncStatus", ignore = true)
     @Mapping(target = "lastCheckIn", expression = "java(getLastCheckInOrNow(dto.getLastCheckIn()))")
     IotDevice toEntity(IotDeviceRequestDto dto);
 
@@ -33,4 +34,3 @@ public interface IotDeviceMapper {
         return lastCheckIn != null ? lastCheckIn : Instant.now();
     }
 }
-
