@@ -49,8 +49,12 @@ public class IotDeviceRepositoryAdapter implements IotDeviceRepository {
     }
 
     @Override
+    public void deleteBySerialNumber(String serialNumber) {
+        jpaRepository.deleteBySerialNumber(serialNumber);
+    }
+
+    @Override
     public boolean existsBySerialNumber(String serialNumber) {
         return jpaRepository.existsBySerialNumber(serialNumber);
     }
 }
-

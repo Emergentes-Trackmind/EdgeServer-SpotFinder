@@ -19,5 +19,6 @@ public interface JpaIotDeviceRepository extends JpaRepository<IotDevice, Long> {
     List<IotDevice> findAllByOwnerId(String ownerId);
 
     boolean existsBySerialNumber(String serialNumber);
-}
 
+    void deleteBySerialNumber(String serialNumber);
+}

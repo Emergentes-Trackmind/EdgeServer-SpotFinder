@@ -42,8 +42,12 @@ public interface IotDeviceRepository {
     void delete(IotDevice device);
 
     /**
+     * Delete a device by serial number
+     */
+    void deleteBySerialNumber(String serialNumber);
+
+    /**
      * Check if device exists by serial number
      */
     boolean existsBySerialNumber(String serialNumber);
 }
-

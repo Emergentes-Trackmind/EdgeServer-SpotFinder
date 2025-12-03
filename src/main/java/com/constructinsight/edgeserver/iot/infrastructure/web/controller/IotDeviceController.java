@@ -1,6 +1,7 @@
 package com.constructinsight.edgeserver.iot.infrastructure.web.controller;
 
 import com.constructinsight.edgeserver.iot.application.dto.DeviceKpiDto;
+import com.constructinsight.edgeserver.iot.application.service.DeviceManagementService;
 import com.constructinsight.edgeserver.iot.application.service.DeviceOwnershipService;
 import com.constructinsight.edgeserver.iot.application.service.DeviceQueryService;
 import com.constructinsight.edgeserver.iot.domain.model.IotDevice;
@@ -12,7 +13,6 @@ import com.constructinsight.edgeserver.iot.infrastructure.web.mapper.IotDeviceMa
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +40,7 @@ public class IotDeviceController {
     private final DeviceQueryService queryService;
     private final IotDeviceRepository deviceRepository;
     private final IotDeviceMapper deviceMapper;
+    private final DeviceManagementService managementService;
 
     /**
      * GET /api/iot/devices
@@ -229,6 +230,37 @@ public class IotDeviceController {
 
         log.info("Successfully created {} devices", savedDevices.size());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * DELETE /api/iot/devices/{serialNumber}
+     * Permanently delete a device from the database by serial number
+     */
+    @Operation(
+            summary = "Eliminar dispositivo permanentemente",
+            description = "Elimina de forma permanente un dispositivo IoT de la base de datos usando su número de serie. " +
+                          "Esta operación es irreversible y elimina completamente el dispositivo del sistema."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Dispositivo eliminado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Dispositivo no encontrado", content = @Content)
+    })
+    @DeleteMapping("/{serialNumber}")
+    public ResponseEntity<?> deleteDevice(
+            @Parameter(description = "Número de serie del dispositivo a eliminar", example = "SENSOR-001")
+            @PathVariable String serialNumber) {
+
+        try {
+            log.info("Delete request for device: {}", serialNumber);
+            managementService.deleteDevice(serialNumber);
+
+            log.info("Device {} successfully deleted", serialNumber);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.error("Delete failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse(e.getMessage()));
+        }
     }
 
     /**
